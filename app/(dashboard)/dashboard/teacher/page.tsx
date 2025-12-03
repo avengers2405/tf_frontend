@@ -1,0 +1,158 @@
+"use client"
+
+import { useAppStore } from "@/lib/store"
+import { StatCard } from "@/components/ui/stat-card"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { SkillBadge } from "@/components/ui/skill-badge"
+import Link from "next/link"
+import { BriefcaseIcon, UserGroupIcon, AcademicCapIcon } from "@heroicons/react/24/outline"
+import { calculateMatchScore } from "@/lib/mock-data"
+
+export default function TeacherDashboard() {
+  const { opportunities, students } = useAppStore()
+
+  const myOpportunities = opportunities.filter((o) => o.postedBy.includes("Prof") || o.postedBy.includes("Dr"))
+  const projectOpportunities = opportunities.filter((o) => o.type === "project")
+
+  // Mock: Latest posted opportunity for matching
+  const latestOpportunity = myOpportunities[0] || opportunities[1]
+
+  // Sort students by match score for latest opportunity
+  const rankedStudents = students
+    .map((student) => ({
+      ...student,
+      matchScore: latestOpportunity ? calculateMatchScore(student.skills, latestOpportunity.skills) : 0,
+    }))
+    .sort((a, b) => b.matchScore - a.matchScore)
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Teacher Dashboard</h1>
+        <p className="mt-1 text-muted-foreground">Manage projects and guide students</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <StatCard
+          title="My Opportunities"
+          value={myOpportunities.length}
+          description="Projects & internships"
+          icon={<BriefcaseIcon className="h-6 w-6" />}
+        />
+        <StatCard
+          title="Active Projects"
+          value={projectOpportunities.length}
+          description="This semester"
+          icon={<AcademicCapIcon className="h-6 w-6" />}
+        />
+        <StatCard
+          title="Total Students"
+          value={students.length}
+          description="In database"
+          icon={<UserGroupIcon className="h-6 w-6" />}
+        />
+      </div>
+
+      <Card className="glass rounded-2xl p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-foreground">Quick Actions</h2>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Button className="justify-start h-auto py-4" asChild>
+            <Link href="/post-opportunity">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <BriefcaseIcon className="h-5 w-5" />
+                  <span className="font-semibold">Post New Opportunity</span>
+                </div>
+                <p className="text-xs text-primary-foreground/80">Create internship or project</p>
+              </div>
+            </Link>
+          </Button>
+          <Button className="justify-start h-auto py-4 bg-transparent" variant="outline" asChild>
+            <Link href="/resumes">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <UserGroupIcon className="h-5 w-5" />
+                  <span className="font-semibold">Browse Students</span>
+                </div>
+                <p className="text-xs text-muted-foreground">View student profiles</p>
+              </div>
+            </Link>
+          </Button>
+        </div>
+      </Card>
+
+      {latestOpportunity && (
+        <Card className="glass rounded-2xl p-6">
+          <h2 className="mb-4 text-xl font-semibold text-foreground">
+            Best-Fit Students for: {latestOpportunity.title}
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">Students ranked by skill match score</p>
+
+          <div className="space-y-3">
+            {rankedStudents.slice(0, 8).map((student) => (
+              <div
+                key={student.id}
+                className="flex items-center justify-between rounded-lg border border-border p-4 transition-all hover:border-primary/50"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-medium text-foreground">Student {student.id}</h3>
+                    <span className="text-sm text-muted-foreground">
+                      {student.department} • Year {student.year} • CGPA: {student.cgpa}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {student.skills.slice(0, 5).map((skill) => (
+                      <SkillBadge key={skill} skill={skill} variant="default" />
+                    ))}
+                  </div>
+                </div>
+                <div className="ml-4 flex flex-col items-end gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <span className="text-sm font-bold text-primary">{student.matchScore}%</span>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    View Profile
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card className="glass rounded-2xl p-6">
+        <h2 className="mb-4 text-xl font-semibold text-foreground">My Posted Opportunities</h2>
+        {myOpportunities.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {myOpportunities.map((opp) => (
+              <div key={opp.id} className="rounded-lg border border-border p-4">
+                <div className="mb-2 flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-foreground">{opp.title}</h3>
+                    <p className="text-sm text-muted-foreground">{opp.company}</p>
+                  </div>
+                  <span className="rounded-full bg-secondary px-2 py-1 text-xs">{opp.applicants} applicants</span>
+                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{opp.description}</p>
+                <Button size="sm" variant="ghost" asChild>
+                  <Link href={`/opportunities/${opp.id}`}>View Details</Link>
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No opportunities posted yet</p>
+            <Button asChild>
+              <Link href="/post-opportunity">Post Your First Opportunity</Link>
+            </Button>
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+}
