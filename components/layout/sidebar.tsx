@@ -15,6 +15,7 @@ import {
   ArrowUpTrayIcon,
   UsersIcon,
   AcademicCapIcon,
+  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline"
 
 export function Sidebar() {
@@ -38,6 +39,7 @@ export function Sidebar() {
       { name: "Team Builder", href: "/team-builder", icon: UserGroupIcon },
       { name: "Recommendations", href: "/recommendations", icon: AcademicCapIcon },
       { name: "Notifications", href: "/notifications", icon: BellIcon },
+      { name: "Project Progress", href: "/project-progress", icon: ArrowTrendingUpIcon },
     ],
     tnp: [
       { name: "Dashboard", href: "/dashboard/tnp", icon: HomeIcon },
